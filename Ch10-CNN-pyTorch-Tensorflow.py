@@ -24,22 +24,12 @@ from tensorflow.keras.datasets import cifar100
 x_train = x_train.astype('float32') / 255.0
 x_test = x_test.astype('float32') / 255.0
 
-# %% [markdown]
-# The `CIFAR100` dataset consists of 50,000 training images, each represented by a three-dimensional tensor:
-# each three-color image is represented as a set of three channels, each of which consists of
-# $32\times 32$ eight-bit pixels. We standardize as we did for the
-# digits, but keep the array structure. This is accomplished with the `ToTensor()` transform.
-# 
-# Creating the data module is similar to the `MNIST`  example.
-
 # %%
 train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train)).shuffle(50000).batch(128)
 test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(128)
 
 
 # %% [markdown]
-# Here the `imshow()` method recognizes from the shape of its argument that it is a 3-dimensional array, with the last dimension indexing the three RGB color channels.
-# 
 # We specify a moderately-sized  CNN for
 # demonstration purposes, similar in structure to Figure 10.8.
 # We use several layers, each consisting of  convolution, ReLU, and max-pooling steps.
@@ -64,20 +54,6 @@ class BuildingBlock(Model):
         x = self.pool(x)
         return x
 
-
-# %% [markdown]
-# Notice that we used the `padding = "same"` argument to
-# `nn.Conv2d()`, which ensures that the output channels have the
-# same dimension as the input channels. There are 32 channels in the first
-# hidden layer, in contrast to the three channels in the input layer. We
-# use a $3\times 3$ convolution filter for each channel in all the layers. Each
-# convolution is followed by a max-pooling layer over $2\times2$ blocks.
-# 
-# In forming our deep learning model for the `CIFAR100` data, we use several of our `BuildingBlock()`
-# modules sequentially. This simple example
-# illustrates some of the power of `torch`. Users can
-# define modules of their own, which can be combined in other
-# modules. Ultimately, everything is fit by a generic trainer.
 
 # %%
 class CIFARModel(Model):
@@ -108,35 +84,7 @@ cifar_model.compile(
     loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=['accuracy']
 )
-# %% [markdown]
-# The total number of trainable parameters is 964,516.
-# By studying the size of the parameters, we can see that the channels halve in both
-# dimensions
-# after each of these max-pooling operations. After the last of these we
-# have a layer with  256 channels of dimension $2\times 2$. These are then
-# flattened to a dense layer of size 1,024;
-# in other words, each of the $2\times 2$ matrices is turned into a
-# $4$-vector, and put side-by-side in one layer. This is followed by a
-# dropout regularization layer,  then
-# another dense layer of size 512, and finally, the
-# output layer.
-# 
-# Up to now, we have been using a default
-# optimizer in `SimpleModule()`. For these data,
-# experiments show that a smaller learning rate performs
-# better than the default 0.01. We use a
-# custom optimizer here with a learning rate of 0.001.
-# Besides this, the logging and training
-# follow a similar pattern to our previous examples. The optimizer
-# takes an argument `params` that informs
-# the optimizer which parameters are involved in SGD (stochastic gradient descent).
-# 
-# We saw earlier that entries of a module’s parameters are tensors. In passing
-# the parameters to the optimizer we are doing more than
-# simply passing arrays; part of the structure of the graph
-# is encoded in the tensors themselves.
-
-
+# %% 
 # Train the model
 early_stopping = EarlyStopping(monitor='val_loss', patience=5)
 
