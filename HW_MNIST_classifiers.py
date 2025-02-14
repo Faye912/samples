@@ -47,6 +47,78 @@ dfdigits = pd.read_csv(filepath, names=headers)
 
 df = pd.read_csv(filepath)
 
+# %%
+
+# Your tasks:
+# 1. Set up the pipelines for these six classifiers. Use a set of
+# reasonable hyperparameters. You don't need to try find the optimal ones.
+# Separate features and target
+# Use a smaller sample for quicker running time
+df_small = dfdigits.sample(n=10000, random_state=42)
+X = df_small.iloc[:, 1:].values # Pixel data
+y = df_small.iloc[:, 0].values # Labels
+# Normalize rows (contrast adjustment)
+normalizer = Normalizer()
+# Split dataset into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
+random_state=42)
+# Define classifiers with reasonable hyperparameters
+classifiers = {
+"LogisticRegression": LogisticRegression(max_iter=1000, solver='lbfgs',
+multi_class='multinomial'),
+"DecisionTreeClassifier (gini)": DecisionTreeClassifier(criterion='gini',
+max_depth=10),
+"DecisionTreeClassifier (entropy)": DecisionTreeClassifier(criterion='entropy',
+max_depth=10),
+"SVC (rbf, gamma='scale')": SVC(gamma='scale'),
+"SVC (linear kernel)": SVC(kernel="linear"),
+"LinearSVC": LinearSVC(max_iter=1000),
+"KNeighborsClassifier (k=5)": KNeighborsClassifier(n_neighbors=5)
+}
+# Initialize results list
+results = []
+# 2. Obtain the classification report for each of the six classifiers.
+# Train and evaluate each model
+for name, model in classifiers.items():
+# Start timer
+start_time = time.time()
+# Create pipeline
+pipeline = Pipeline([
+('normalize', normalizer),
+('classifier', model)
+])
+# Fit the model
+pipeline.fit(X_train, y_train)
+# Predict and evaluate
+y_pred = pipeline.predict(X_test)
+report = classification_report(y_test, y_pred, output_dict=True)
+accuracy = report['accuracy']
+# Calculate runtime
+runtime = time.time() - start_time
+# Append results
+results.append({
+'Model': name,
+'Accuracy': accuracy,
+'Runtime (s)': runtime,
+'Hyperparameters': model.get_params()
+})
+# 3. Record the runtimes for these models. Tabulate your results. Also include
+# in your table the hyperparameters you used in the models.
+# Convert results to DataFrame
+results_df = pd.DataFrame(results)
+# Display results
+print(results_df)
+for name, model in classifiers.items():
+pipeline = Pipeline([
+('normalize', normalizer),
+('classifier', model)
+])
+start_time = time.time()
+cv_scores = cross_val_score(pipeline, X, y, cv=5, scoring='accuracy')
+runtime = time.time() - start_time
+print(f"Model: {name}, CV Mean Accuracy: {cv_scores.mean():.4f}, Runtime:
+{runtime:.2f}s")
+
 
 # %%
 
